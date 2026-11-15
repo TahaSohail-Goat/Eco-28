@@ -252,6 +252,237 @@
       "aspect_ratio": 0.8,
       "src": "/media/pdf-projects/second-floor-bedroom-03.jpeg",
       "title": "Second Floor Bedroom 03"
+    },
+    {
+      "id": 1023,
+      "slug": "eco28-aframe-exterior-01",
+      "category": "Model Studies",
+      "description": "Bamboo Capsule Hotel A-frame concept, front view among palms",
+      "width": 1080,
+      "height": 1029,
+      "aspect_ratio": 1.05,
+      "src": "/media/eco28-profile/eco28-aframe-exterior-01.jpeg",
+      "title": "Bamboo A-Frame Exterior 01"
+    },
+    {
+      "id": 1024,
+      "slug": "eco28-aframe-exterior-02",
+      "category": "Model Studies",
+      "description": "Bamboo Capsule Hotel A-frame concept, three-quarter view",
+      "width": 1080,
+      "height": 966,
+      "aspect_ratio": 1.118,
+      "src": "/media/eco28-profile/eco28-aframe-exterior-02.jpeg",
+      "title": "Bamboo A-Frame Exterior 02"
+    },
+    {
+      "id": 1025,
+      "slug": "eco28-aframe-exterior-03",
+      "category": "Model Studies",
+      "description": "Bamboo Capsule Hotel A-frame concept, elevated vertical view",
+      "width": 878,
+      "height": 1317,
+      "aspect_ratio": 0.667,
+      "src": "/media/eco28-profile/eco28-aframe-exterior-03.jpeg",
+      "title": "Bamboo A-Frame Exterior 03"
+    },
+    {
+      "id": 1026,
+      "slug": "eco28-aframe-floorplan",
+      "category": "Model Studies",
+      "description": "Aerial floor plan study of the bamboo A-frame capsule unit",
+      "width": 1080,
+      "height": 680,
+      "aspect_ratio": 1.588,
+      "src": "/media/eco28-profile/eco28-aframe-floorplan.jpeg",
+      "title": "Bamboo A-Frame Floor Plan"
+    },
+    {
+      "id": 1027,
+      "slug": "eco28-roundhouse-exterior",
+      "category": "Model Studies",
+      "description": "Elevated circular bamboo house concept set on timber stilts",
+      "width": 1080,
+      "height": 548,
+      "aspect_ratio": 1.971,
+      "src": "/media/eco28-profile/eco28-roundhouse-exterior.jpeg",
+      "title": "Bamboo Roundhouse Exterior"
+    },
+    {
+      "id": 1028,
+      "slug": "eco28-pod-exterior-01",
+      "category": "Model Studies",
+      "description": "Round bamboo capsule pod exterior concept",
+      "width": 388,
+      "height": 376,
+      "aspect_ratio": 1.032,
+      "src": "/media/eco28-profile/eco28-pod-exterior-01.jpeg",
+      "title": "Bamboo Pod Exterior 01"
+    },
+    {
+      "id": 1029,
+      "slug": "eco28-pod-floorplan",
+      "category": "Model Studies",
+      "description": "Aerial floor plan study of the round bamboo capsule pod",
+      "width": 476,
+      "height": 380,
+      "aspect_ratio": 1.253,
+      "src": "/media/eco28-profile/eco28-pod-floorplan.jpeg",
+      "title": "Bamboo Pod Floor Plan"
+    },
+    {
+      "id": 1030,
+      "slug": "eco28-pod-exterior-02",
+      "category": "Model Studies",
+      "description": "Egg-shaped bamboo capsule pod concept set in the forest",
+      "width": 465,
+      "height": 379,
+      "aspect_ratio": 1.227,
+      "src": "/media/eco28-profile/eco28-pod-exterior-02.jpeg",
+      "title": "Bamboo Pod Exterior 02"
+    },
+    {
+      "id": 1031,
+      "slug": "eco28-tower-exterior",
+      "category": "Model Studies",
+      "description": "Vertical bamboo capsule tower concept with ladder access",
+      "width": 1057,
+      "height": 1049,
+      "aspect_ratio": 1.008,
+      "src": "/media/eco28-profile/eco28-tower-exterior.jpeg",
+      "title": "Bamboo Tower Exterior"
+    },
+    {
+      "id": 1032,
+      "slug": "eco28-treehouse-exterior",
+      "category": "Model Studies",
+      "description": "Elevated bamboo cabin concept raised on stilts among pines",
+      "width": 1280,
+      "height": 652,
+      "aspect_ratio": 1.963,
+      "src": "/media/eco28-profile/eco28-treehouse-exterior.jpeg",
+      "title": "Elevated Treehouse Cabin"
+    },
+    {
+      "id": 1033,
+      "slug": "eco28-site-plan-aerial",
+      "category": "Model Studies",
+      "description": "Aerial site plan of the Bamboo Capsule Hotel pod cluster",
+      "width": 603,
+      "height": 394,
+      "aspect_ratio": 1.53,
+      "src": "/media/eco28-profile/eco28-site-plan-aerial.jpeg",
+      "title": "Capsule Hotel Site Plan"
+    },
+    {
+      "id": 1034,
+      "slug": "eco28-axonometric-cutaway",
+      "category": "Model Studies",
+      "description": "Exploded axonometric cutaway study of a capsule cabin unit",
+      "width": 325,
+      "height": 391,
+      "aspect_ratio": 0.831,
+      "src": "/media/eco28-profile/eco28-axonometric-cutaway.jpeg",
+      "title": "Capsule Cabin Cutaway Study"
+    },
+    {
+      "id": 1035,
+      "slug": "eco28-capsule-container-home",
+      "category": "Model Studies",
+      "description": "Modern capsule container home concept for residential and hospitality use",
+      "width": 750,
+      "height": 493,
+      "aspect_ratio": 1.521,
+      "src": "/media/eco28-profile/eco28-capsule-container-home.jpeg",
+      "title": "Capsule Container Home"
+    },
+    {
+      "id": 1036,
+      "slug": "eco28-suite-corridor-interior",
+      "category": "Interiors",
+      "description": "Interior corridor of the Bamboo Capsule Hotel with exposed timber framing",
+      "width": 1080,
+      "height": 543,
+      "aspect_ratio": 1.989,
+      "src": "/media/eco28-profile/eco28-suite-corridor-interior.jpeg",
+      "title": "Bamboo Suite Corridor"
+    },
+    {
+      "id": 1037,
+      "slug": "eco28-suite-bedroom-interior",
+      "category": "Interiors",
+      "description": "Bamboo-arched suite interior with vaulted ceiling and garden view",
+      "width": 957,
+      "height": 654,
+      "aspect_ratio": 1.463,
+      "src": "/media/eco28-profile/eco28-suite-bedroom-interior.jpeg",
+      "title": "Bamboo Arched Suite"
+    },
+    {
+      "id": 1038,
+      "slug": "eco28-walkway-exterior",
+      "category": "Architecture",
+      "description": "Elevated bamboo walkway connecting capsule hotel units over water",
+      "width": 1280,
+      "height": 640,
+      "aspect_ratio": 2.0,
+      "src": "/media/eco28-profile/eco28-walkway-exterior.jpeg",
+      "title": "Elevated Bamboo Walkway"
+    },
+    {
+      "id": 1039,
+      "slug": "eco28-deck-interior",
+      "category": "Interiors",
+      "description": "Private soaking tub deck with glazed walls overlooking the lake",
+      "width": 1183,
+      "height": 650,
+      "aspect_ratio": 1.82,
+      "src": "/media/eco28-profile/eco28-deck-interior.jpeg",
+      "title": "Lakeside Soaking Deck"
+    },
+    {
+      "id": 1040,
+      "slug": "eco28-arches-walkway-collage",
+      "category": "Architecture",
+      "description": "Arched bamboo suites over water with a connecting walkway",
+      "width": 1280,
+      "height": 710,
+      "aspect_ratio": 1.803,
+      "src": "/media/eco28-profile/eco28-arches-walkway-collage.jpeg",
+      "title": "Bamboo Arches Over Water"
+    },
+    {
+      "id": 1041,
+      "slug": "eco28-lounge-glass-interior",
+      "category": "Interiors",
+      "description": "Curved bamboo lounge interior with full-height glazing and pool view",
+      "width": 1080,
+      "height": 583,
+      "aspect_ratio": 1.852,
+      "src": "/media/eco28-profile/eco28-lounge-glass-interior.jpeg",
+      "title": "Glass Lounge Interior"
+    },
+    {
+      "id": 1042,
+      "slug": "eco28-office-interior",
+      "category": "Interiors",
+      "description": "Open-plan commercial office interior design project",
+      "width": 1169,
+      "height": 590,
+      "aspect_ratio": 1.981,
+      "src": "/media/eco28-profile/eco28-office-interior.jpeg",
+      "title": "Open-Plan Office Interior"
+    },
+    {
+      "id": 1043,
+      "slug": "eco28-bar-dining-interior",
+      "category": "Interiors",
+      "description": "Bar and dining interior fit-out from Eco28's project portfolio",
+      "width": 1600,
+      "height": 799,
+      "aspect_ratio": 2.003,
+      "src": "/media/eco28-profile/eco28-bar-dining-interior.jpeg",
+      "title": "Bar & Dining Interior"
     }
   ]
 }
