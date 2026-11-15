@@ -393,14 +393,14 @@ section[tabindex="-1"]:focus {
 .expertise-row .depth-photo {
   aspect-ratio: 1.3;
 }
-.expertise-row:nth-of-type(2) {
+.expertise-row:nth-of-type(even) {
   grid-template-columns: 1.3fr 1fr;
 }
-.expertise-row:nth-of-type(2) > .depth-photo {
+.expertise-row:nth-of-type(even) > .depth-photo {
   grid-column: 1;
   grid-row: 1;
 }
-.expertise-row:nth-of-type(2) > div:first-child {
+.expertise-row:nth-of-type(even) > div:first-child {
   grid-column: 2;
   grid-row: 1;
 }
@@ -616,11 +616,11 @@ section[tabindex="-1"]:focus {
   .work-card-caption h3 {
     font-size: 16px;
   }
-  .expertise-row:nth-of-type(2) {
+  .expertise-row:nth-of-type(even) {
     grid-template-columns: 1fr;
   }
-  .expertise-row:nth-of-type(2) > .depth-photo,
-  .expertise-row:nth-of-type(2) > div:first-child {
+  .expertise-row:nth-of-type(even) > .depth-photo,
+  .expertise-row:nth-of-type(even) > div:first-child {
     grid-row: auto;
     grid-column: auto;
   }

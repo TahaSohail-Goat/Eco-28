@@ -1,10 +1,23 @@
 import { Link } from "react-router-dom";
 import { site } from "../../content/site";
-import { photo } from "../../content/media";
+import { photo, type Photo } from "../../content/media";
 import { DepthPhoto } from "../DepthPhoto";
 import { CinematicHeading } from "../type/CinematicHeading";
 import { Reveal } from "../Reveal";
 import { Arrow } from "../Arrow";
+
+// Not part of the Portfolio/Models gallery — used only for this service row.
+const smartSolutionsPhoto: Photo = {
+  id: 9000,
+  slug: "smart-monitoring-dashboard",
+  category: "Architecture",
+  description: "Live building monitoring dashboard on a handheld tablet",
+  width: 1033,
+  height: 581,
+  aspect_ratio: 1033 / 581,
+  src: "/media/eco28-profile/eco28-smart-monitoring-dashboard.jpeg",
+  title: "Smart Monitoring Dashboard",
+};
 export function StudioIntro() {
   return (
     <>
@@ -48,7 +61,7 @@ export function StudioExpertiseSection() {
       id="expertise"
       aria-labelledby="expertise-title"
     >
-      <p className="eyebrow">The two disciplines</p>
+      <p className="eyebrow">What we do</p>
       <CinematicHeading
         id="expertise-title"
         lines={[
@@ -93,6 +106,48 @@ export function StudioExpertiseSection() {
         </div>
         <DepthPhoto
           item={photo("interior-dining-living")}
+          sizes="(min-width:768px) 50vw, 100vw"
+        />
+      </div>
+      <div className="expertise-row">
+        <div id="architectural-models">
+          <span className="eyebrow">03 / Architectural Models</span>
+          <h3>
+            Concepts, built
+            <br />
+            up by hand.
+          </h3>
+          <p>
+            Physical and digital model studies that turn a concept into
+            something you can walk around before it&rsquo;s built.
+          </p>
+          <Link className="line-link" to="/?category=Model%20Studies#work">
+            View models <Arrow diagonal />
+          </Link>
+        </div>
+        <DepthPhoto
+          item={photo("eco28-axonometric-cutaway")}
+          sizes="(min-width:768px) 50vw, 100vw"
+        />
+      </div>
+      <div className="expertise-row">
+        <div id="smart-solutions">
+          <span className="eyebrow">04 / Smart Solutions</span>
+          <h3>
+            Buildings that
+            <br />
+            respond.
+          </h3>
+          <p>
+            Smart monitoring and automation systems integrated into a
+            building&rsquo;s design from the start, not bolted on afterward.
+          </p>
+          <Link className="line-link" to="/#contact">
+            Enquire <Arrow diagonal />
+          </Link>
+        </div>
+        <DepthPhoto
+          item={smartSolutionsPhoto}
           sizes="(min-width:768px) 50vw, 100vw"
         />
       </div>
