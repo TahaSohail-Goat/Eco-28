@@ -9,7 +9,8 @@ import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUnifo
 import { cameraBeats, sampleCamera, chapterAt, residenceChapters, residenceCallouts, type Tuple3 } from "../../content/heroWalkthrough";
 import { buildResidence } from "./ResidenceModel";
 import { residenceMaterials, residenceTextureUrls } from "./ResidenceMaterials";
-import { liteResidence, residenceAssetUrls, useResidenceAssets } from "./ResidenceAssets";
+import { residenceAssetUrls, useResidenceAssets } from "./ResidenceAssets";
+import { liteResidence } from "./residenceQuality";
 import { ResidenceFinish } from "./ResidenceFinish";
 
 type Props = {
@@ -20,7 +21,8 @@ type Props = {
   onFailure: () => void;
 };
 const smooth = (p: number) => { const x=MathUtils.clamp(p,0,1);return x*x*(3-2*x); };
-const sky="/media/residence-realism/garden-sky.hdr";
+const reducedMotion=typeof window!=="undefined"&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+const sky=`/media/residence-realism${liteResidence?"/lite":""}/garden-sky.hdr`;
 // Start every independent asset group together; the sky otherwise waits until
 // the models resolve, adding a full extra download to the reveal.
 useGLTF.preload(residenceAssetUrls);
@@ -48,13 +50,46 @@ function Walkthrough({progress,redraw,overlay,onReady,onFailure}:Props) {
     return ()=>{redraw.current=null;cancelAnimationFrame(readyFrame.current);ready.current=false;gl.domElement.removeEventListener("webglcontextlost",lost);};
   },[redraw,invalidate,gl,onFailure]);
   useEffect(()=>{gl.shadowMap.needsUpdate=true;invalidate();},[size.width,size.height,gl,invalidate]);
-  useFrame(()=>{
+  const introStart=useRef(0);
+  const pointerGoal=useMemo(()=>({x:0,y:0}),[]), pointerNow=useMemo(()=>({x:0,y:0}),[]);
+  useEffect(()=>{
+    if(liteResidence||!matchMedia("(pointer: fine) and (prefers-reduced-motion: no-preference)").matches)return;
+    const move=(event:PointerEvent)=>{pointerGoal.x=event.clientX/innerWidth*2-1;pointerGoal.y=event.clientY/innerHeight*2-1;invalidate();};
+    window.addEventListener("pointermove",move,{passive:true});
+    return ()=>window.removeEventListener("pointermove",move);
+  },[pointerGoal,invalidate]);
+  const setDpr=useThree(state=>state.setDpr);
+  const pace=useMemo(()=>({last:0,sum:0,frames:0,scale:1}),[]);
+  useFrame((_,delta)=>{
+    if(liteResidence) {
+      // Back-to-back renders (scrolling, the opening glide) reveal the GPU's real
+      // pace; slow devices step their resolution down until motion stays fluid.
+      const now=performance.now(),gap=now-pace.last;pace.last=now;
+      if(gap<150){pace.sum+=gap;pace.frames++;}
+      if(pace.frames>=30) {
+        const average=pace.sum/pace.frames;pace.sum=pace.frames=0;
+        if(average>24&&pace.scale>.75){pace.scale=pace.scale>.85?.85:.75;setDpr(pace.scale);}
+      }
+    }
     const p=progress.current,pose=sampleCamera(p);
     // Move the EXTERIOR camera back in portrait; retain eye-height interior routing.
     const exterior = 1-smooth(p/.17) + smooth((p-.85)/.12);
     const widen=mobile ? .3*exterior : 0;
     if(mobile)pose.target[1]-=2.3*exterior;
     pose.position=pose.position.map((v,i)=>pose.target[i]+(v-pose.target[i])*(1+widen)) as Tuple3;
+    // Opening only: an establishing glide from a wider orbit, then pointer parallax.
+    const opening=1-smooth(p/.05);
+    const intro=introStart.current?Math.min(1,(performance.now()-introStart.current)/2800):0;
+    const away=(1-(1-(1-intro)**3)*(introStart.current?1:0))*opening*(reducedMotion?0:1);
+    const follow=Math.min(1,Math.min(delta,.05)*4);
+    pointerNow.x+=(pointerGoal.x-pointerNow.x)*follow;pointerNow.y+=(pointerGoal.y-pointerNow.y)*follow;
+    const yaw=away*.42+pointerNow.x*.07*opening, dolly=1+away*.22;
+    const dx=pose.position[0]-pose.target[0], dz=pose.position[2]-pose.target[2];
+    pose.position=[pose.target[0]+(dx*Math.cos(yaw)-dz*Math.sin(yaw))*dolly,
+      pose.target[1]+(pose.position[1]-pose.target[1])*dolly+away*4.5-pointerNow.y*.9*opening,
+      pose.target[2]+(dx*Math.sin(yaw)+dz*Math.cos(yaw))*dolly];
+    const settling=Math.abs(pointerGoal.x-pointerNow.x)+Math.abs(pointerGoal.y-pointerNow.y)>.001;
+    if(opening>0&&((introStart.current&&intro<1)||settling))invalidate();
     const c=camera as PerspectiveCamera;
     c.position.fromArray(pose.position);c.lookAt(...pose.target);
     c.fov=pose.fov+(mobile?14-4*exterior:0);c.updateProjectionMatrix();c.updateMatrixWorld();
@@ -97,15 +132,17 @@ function Walkthrough({progress,redraw,overlay,onReady,onFailure}:Props) {
         text.setAttribute("x",String(tx));text.setAttribute("y",String(ty));
       });
     }
-    if(prepared.current&&!ready.current){gl.shadowMap.needsUpdate=true;ready.current=true;readyFrame.current=requestAnimationFrame(onReady);}
+    if(prepared.current&&!ready.current){gl.shadowMap.needsUpdate=true;ready.current=true;introStart.current=performance.now();invalidate();readyFrame.current=requestAnimationFrame(onReady);}
   });
   const m=surfaces.materials;
   return <>
     <color attach="background" args={["#bfc6bf"]}/>
-    <fog attach="fog" args={["#8a9488",180,800]}/>
-    <Environment files={sky} background backgroundBlurriness={0} backgroundIntensity={1.2} environmentIntensity={.55}/>
-    <hemisphereLight args={["#dbe4ec","#74674f",.4]}/>
-    <directionalLight position={[-18,26,18]} color="#ffe5c4" intensity={2.5} castShadow
+    {/* Aerial haze matched to the horizon melts the open field into the sky. */}
+    <fog attach="fog" args={["#8e9698",55,320]}/>
+    <Environment files={sky} background backgroundBlurriness={0} backgroundIntensity={1.2} environmentIntensity={.6}/>
+    <hemisphereLight args={["#dbe4ec","#74674f",.36]}/>
+    {/* Late-afternoon sun: warmer and lower, for longer modelling shadows. */}
+    <directionalLight position={[-21,21,17]} color="#ffd8a8" intensity={2.9} castShadow
       shadow-mapSize={[1024,1024]}
       shadow-camera-left={-22} shadow-camera-right={22} shadow-camera-top={22} shadow-camera-bottom={-14}
       shadow-camera-near={1} shadow-camera-far={75} shadow-normalBias={.035} shadow-bias={-.0002}

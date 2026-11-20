@@ -194,7 +194,7 @@ export function HeroScene() {
             start: "top top",
             end: () => `+=${innerHeight * (desktop ? heroWalkthrough.desktopScroll : heroWalkthrough.mobileScroll)}`,
             pin: true,
-            scrub: 0.18,
+            scrub: 0.4,
             invalidateOnRefresh: true,
             anticipatePin: 1,
           },

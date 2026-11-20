@@ -15,6 +15,7 @@ export function PhotoImage({
   full?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   if (failed)
     return (
       <div
@@ -46,6 +47,11 @@ export function PhotoImage({
       fetchPriority={priority ? "high" : "auto"}
       decoding="async"
       className={className}
+      data-loaded={loaded}
+      ref={(image) => {
+        if (image?.complete && image.naturalWidth && !loaded) setLoaded(true);
+      }}
+      onLoad={() => setLoaded(true)}
       onError={() => setFailed(true)}
     />
   );

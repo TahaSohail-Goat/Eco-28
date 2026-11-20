@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { scrollToSection, sectionId, sectionScrollPosition } from "./anchors";
+import { installSmoothWheel } from "./smoothWheel";
 
 gsap.registerPlugin(ScrollTrigger);
 export function ScrollEngine() {
@@ -29,7 +30,9 @@ export function ScrollEngine() {
     };
     window.addEventListener("studio:scroll-to", navigateSequence);
     document.addEventListener("click", repeatContentAnchor, true);
+    const uninstallSmoothWheel = installSmoothWheel();
     return () => {
+      uninstallSmoothWheel();
       window.removeEventListener("studio:scroll-to", navigateSequence);
       document.removeEventListener("click", repeatContentAnchor, true);
       cancelAnimationFrame(repeatFrame);
