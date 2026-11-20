@@ -4,7 +4,7 @@ import { Environment } from "@react-three/drei/core/Environment";
 import { useEnvironment } from "@react-three/drei/core/useEnvironment";
 import { useGLTF } from "@react-three/drei/core/Gltf";
 import { useTexture } from "@react-three/drei/core/Texture";
-import { AgXToneMapping, DefaultLoadingManager, Group, MathUtils, MeshStandardMaterial, PCFSoftShadowMap, PerspectiveCamera, Vector3 } from "three";
+import { AgXToneMapping, DefaultLoadingManager, Group, MathUtils, MeshStandardMaterial, PCFShadowMap, PCFSoftShadowMap, PerspectiveCamera, Vector3 } from "three";
 import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUniformsLib.js";
 import { cameraBeats, sampleCamera, chapterAt, residenceChapters, residenceCallouts, type Tuple3 } from "../../content/heroWalkthrough";
 import { buildResidence, type Residence } from "./ResidenceModel";
@@ -24,6 +24,8 @@ type Props = {
 const smooth = (p: number) => { const x=MathUtils.clamp(p,0,1);return x*x*(3-2*x); };
 const reducedMotion=typeof window!=="undefined"&&matchMedia("(prefers-reduced-motion: reduce)").matches;
 const sky=`/media/residence-realism${liteResidence?"/lite":""}/garden-sky.hdr`;
+// Phones start sharp (antialiased, up to 1.5x) and step down only if frames run slow.
+const liteDpr=typeof window!=="undefined"?Math.max(1,Math.min(1.5,window.devicePixelRatio||1)):1;
 // Report download progress before the preloads below start. Totals grow as
 // models reveal their textures, so the reported fraction never moves backwards.
 let assetProgress=0;
@@ -47,7 +49,7 @@ function Walkthrough({progress,redraw,overlay,onReady,onFailure}:Props) {
   const point=useMemo(()=>new Vector3(),[]);
   const assets=useResidenceAssets();
   const maps=useTexture(residenceTextureUrls);
-  const surfaces=useMemo(()=>residenceMaterials(maps,Math.min(liteResidence?4:8,gl.capabilities.getMaxAnisotropy()),liteResidence),[maps,gl]);
+  const surfaces=useMemo(()=>residenceMaterials(maps,Math.min(8,gl.capabilities.getMaxAnisotropy()),liteResidence),[maps,gl]);
   const [residence,setResidence]=useState<Residence|null>(null);
   // Build in ~8ms slices across frames so the page and its loader keep animating.
   useEffect(()=>{
@@ -81,16 +83,16 @@ function Walkthrough({progress,redraw,overlay,onReady,onFailure}:Props) {
     return ()=>window.removeEventListener("pointermove",move);
   },[pointerGoal,invalidate]);
   const setDpr=useThree(state=>state.setDpr);
-  const pace=useMemo(()=>({last:0,sum:0,frames:0,scale:1}),[]);
+  const pace=useMemo(()=>({last:0,gaps:[] as number[],scale:liteDpr}),[]);
   useFrame((_,delta)=>{
     if(liteResidence) {
-      // Back-to-back renders (scrolling, the opening glide) reveal the GPU's real
-      // pace; slow devices step their resolution down until motion stays fluid.
+      // Renders while scrolling or gliding reveal the GPU's real pace; the median
+      // ignores idle pauses. Slow devices step resolution down until it's fluid.
       const now=performance.now(),gap=now-pace.last;pace.last=now;
-      if(gap<150){pace.sum+=gap;pace.frames++;}
-      if(pace.frames>=30) {
-        const average=pace.sum/pace.frames;pace.sum=pace.frames=0;
-        if(average>24&&pace.scale>.75){pace.scale=pace.scale>.85?.85:.75;setDpr(pace.scale);}
+      if(gap<1000)pace.gaps.push(gap);
+      if(pace.gaps.length>=20) {
+        const median=pace.gaps.sort((a,b)=>a-b)[10];pace.gaps.length=0;
+        if(median>24&&pace.scale>.85){pace.scale=pace.scale>1.3?1.25:pace.scale>1.1?1:.85;setDpr(pace.scale);}
       }
     }
     const p=progress.current,pose=sampleCamera(p);
@@ -173,7 +175,9 @@ function Walkthrough({progress,redraw,overlay,onReady,onFailure}:Props) {
         the four levels without compiling eight lights into every material.
         Skipped on lite devices: area lights evaluate a per-pixel LTC lookup
         that is disproportionately costly on mobile GPUs. */}
-    {!liteResidence && <rectAreaLight position={[9,7,0]} rotation={[0,Math.PI/2,0]} width={10} height={15} intensity={3.2} color="#ffead2"/>}
+    {liteResidence
+      ? <directionalLight position={[16,8,2]} intensity={1.1} color="#ffead2" target-position={[0,5,0]}/>
+      : <rectAreaLight position={[9,7,0]} rotation={[0,Math.PI/2,0]} width={10} height={15} intensity={3.2} color="#ffead2"/>}
     {residence&&<primitive object={residence.root}/>}
     {residence&&<ResidenceFinish prepared={prepared} onFailure={onFailure}/>}
     <group ref={sliding}>
@@ -199,9 +203,10 @@ export default function HeroWalkthroughCanvas(props:Props) {
     return ()=>{progressListeners.delete(onProgress);};
   },[onProgress]);
   return <Canvas camera={{position:cameraBeats[0].position,fov:43,near:.06,far:1000}}
-    frameloop="demand" shadows={!liteResidence} dpr={liteResidence?1:[1,1.25]}
-    gl={{antialias:!liteResidence,alpha:false,powerPreference:"high-performance"}}
-    onCreated={({gl})=>{gl.toneMapping=AgXToneMapping;gl.toneMappingExposure=1.05;gl.shadowMap.type=PCFSoftShadowMap;}}>
+    frameloop="demand" shadows dpr={liteResidence?liteDpr:[1,1.25]}
+    gl={{antialias:true,alpha:false,powerPreference:"high-performance"}}
+    // The shadow map renders once, so phones only pay a hard-edged lookup per pixel.
+    onCreated={({gl})=>{gl.toneMapping=AgXToneMapping;gl.toneMappingExposure=1.05;gl.shadowMap.type=liteResidence?PCFShadowMap:PCFSoftShadowMap;}}>
     <Walkthrough {...props}/>
   </Canvas>;
 }
