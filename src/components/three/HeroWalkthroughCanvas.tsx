@@ -1,13 +1,13 @@
-﻿import { useEffect, useMemo, useRef, type RefObject } from "react";
+﻿import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Environment } from "@react-three/drei/core/Environment";
 import { useEnvironment } from "@react-three/drei/core/useEnvironment";
 import { useGLTF } from "@react-three/drei/core/Gltf";
 import { useTexture } from "@react-three/drei/core/Texture";
-import { AgXToneMapping, Group, MathUtils, MeshStandardMaterial, PCFSoftShadowMap, PerspectiveCamera, Vector3 } from "three";
+import { AgXToneMapping, DefaultLoadingManager, Group, MathUtils, MeshStandardMaterial, PCFSoftShadowMap, PerspectiveCamera, Vector3 } from "three";
 import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUniformsLib.js";
 import { cameraBeats, sampleCamera, chapterAt, residenceChapters, residenceCallouts, type Tuple3 } from "../../content/heroWalkthrough";
-import { buildResidence } from "./ResidenceModel";
+import { buildResidence, type Residence } from "./ResidenceModel";
 import { residenceMaterials, residenceTextureUrls } from "./ResidenceMaterials";
 import { residenceAssetUrls, useResidenceAssets } from "./ResidenceAssets";
 import { liteResidence } from "./residenceQuality";
@@ -19,10 +19,18 @@ type Props = {
   overlay: RefObject<HTMLDivElement | null>;
   onReady: () => void;
   onFailure: () => void;
+  onProgress?: (fraction: number) => void;
 };
 const smooth = (p: number) => { const x=MathUtils.clamp(p,0,1);return x*x*(3-2*x); };
 const reducedMotion=typeof window!=="undefined"&&matchMedia("(prefers-reduced-motion: reduce)").matches;
 const sky=`/media/residence-realism${liteResidence?"/lite":""}/garden-sky.hdr`;
+// Report download progress before the preloads below start. Totals grow as
+// models reveal their textures, so the reported fraction never moves backwards.
+let assetProgress=0;
+const progressListeners=new Set<(fraction:number)=>void>();
+const reportProgress=(fraction:number)=>{assetProgress=Math.max(assetProgress,fraction);progressListeners.forEach(listener=>listener(assetProgress));};
+DefaultLoadingManager.onProgress=(_url,loaded,total)=>reportProgress(total?loaded/total:0);
+DefaultLoadingManager.onLoad=()=>reportProgress(1);
 // Start every independent asset group together; the sky otherwise waits until
 // the models resolve, adding a full extra download to the reveal.
 useGLTF.preload(residenceAssetUrls);
@@ -40,8 +48,22 @@ function Walkthrough({progress,redraw,overlay,onReady,onFailure}:Props) {
   const assets=useResidenceAssets();
   const maps=useTexture(residenceTextureUrls);
   const surfaces=useMemo(()=>residenceMaterials(maps,Math.min(liteResidence?4:8,gl.capabilities.getMaxAnisotropy()),liteResidence),[maps,gl]);
-  const residence=useMemo(()=>buildResidence(surfaces.materials,assets.library),[surfaces,assets]);
-  useEffect(()=>()=>{residence.dispose();surfaces.dispose();assets.dispose();},[residence,surfaces,assets]);
+  const [residence,setResidence]=useState<Residence|null>(null);
+  // Build in ~8ms slices across frames so the page and its loader keep animating.
+  useEffect(()=>{
+    const steps=buildResidence(surfaces.materials,assets.library);
+    let frame=0,built:Residence|null=null;
+    const run=()=>{
+      const budget=performance.now()+8;
+      let step=steps.next();
+      while(!step.done&&performance.now()<budget)step=steps.next();
+      if(step.done){built=step.value;setResidence(built);}
+      else frame=requestAnimationFrame(run);
+    };
+    frame=requestAnimationFrame(run);
+    return ()=>{cancelAnimationFrame(frame);built?.dispose();setResidence(null);};
+  },[surfaces,assets]);
+  useEffect(()=>()=>{surfaces.dispose();assets.dispose();},[surfaces,assets]);
   useEffect(()=>{
     redraw.current=invalidate;
     gl.shadowMap.autoUpdate=false;gl.shadowMap.needsUpdate=true;
@@ -152,8 +174,8 @@ function Walkthrough({progress,redraw,overlay,onReady,onFailure}:Props) {
         Skipped on lite devices: area lights evaluate a per-pixel LTC lookup
         that is disproportionately costly on mobile GPUs. */}
     {!liteResidence && <rectAreaLight position={[9,7,0]} rotation={[0,Math.PI/2,0]} width={10} height={15} intensity={3.2} color="#ffead2"/>}
-    <primitive object={residence.root}/>
-    <ResidenceFinish prepared={prepared} onFailure={onFailure}/>
+    {residence&&<primitive object={residence.root}/>}
+    {residence&&<ResidenceFinish prepared={prepared} onFailure={onFailure}/>}
     <group ref={sliding}>
       <mesh position={[0,1.55,5.45]} material={m.glass}><boxGeometry args={[2.75,3.1,.025]}/></mesh>
       {[-1.37,1.37].map(x=><mesh key={x} position={[x,1.55,5.46]} material={m.bronze}><boxGeometry args={[.045,3.1,.065]}/></mesh>)}
@@ -170,6 +192,12 @@ function Walkthrough({progress,redraw,overlay,onReady,onFailure}:Props) {
   </>;
 }
 export default function HeroWalkthroughCanvas(props:Props) {
+  const {onProgress}=props;
+  useEffect(()=>{
+    if(!onProgress)return;
+    onProgress(assetProgress);progressListeners.add(onProgress);
+    return ()=>{progressListeners.delete(onProgress);};
+  },[onProgress]);
   return <Canvas camera={{position:cameraBeats[0].position,fov:43,near:.06,far:1000}}
     frameloop="demand" shadows={!liteResidence} dpr={liteResidence?1:[1,1.25]}
     gl={{antialias:!liteResidence,alpha:false,powerPreference:"high-performance"}}

@@ -14,7 +14,9 @@ const pi = Math.PI;
 /** Batch geometry by material AND storey, retaining camera culling across floors.
  * Slabs are built around a real stair opening; there is no animated wall removal.
  */
-export function buildResidence(m: Palette, library: ResidenceLibrary) {
+export type Residence = { root: Group; dispose: () => void };
+/** A generator: callers advance it in small slices so building never blocks a frame for long. */
+export function* buildResidence(m: Palette, library: ResidenceLibrary): Generator<void, Residence> {
   const palette={...m};
   const root=new Group(); root.name="The Residence — original four-storey concept";
   const batches = new Map<string, BufferGeometry[]>();
@@ -169,6 +171,7 @@ export function buildResidence(m: Palette, library: ResidenceLibrary) {
     const factor=(5.8+(i%2)*.7)/library.tree.size.y;
     place("tree",[x,-.05,z],[factor,factor,factor],i*1.71);
   });
+  yield;
   // A defined garden boundary replaces the bare, infinite brown field.
   box([-18,1,-1],[.3,2,33],"plaster");box([18,1,-1],[.3,2,33],"plaster");
   box([0,1,-18],[36,2,.3],"plaster");
@@ -180,6 +183,7 @@ export function buildResidence(m: Palette, library: ResidenceLibrary) {
   });
 
   for(let floor=0;floor<4;floor++) {
+    yield;
     zone=`level-${floor}`;
     const y=floor*3.5;
     // Floor plate split around the genuine 3.9m x 6m open stairwell.
@@ -251,6 +255,7 @@ export function buildResidence(m: Palette, library: ResidenceLibrary) {
       rod([-4.22,y+.02,2.45],[-4.22,y+1.7,-2.45],.065,"dark");
       rod([-2.12,y+1.77,-2.45],[-2.12,y+3.45,2.45],.065,"dark");
     }
+    yield;
     pot(6,y,4.7,1.2);
     // A sculptural light floats inside each double-flight stair volume.
     pendant(-3.2,y+2.85,-.2,.35);
@@ -340,6 +345,7 @@ export function buildResidence(m: Palette, library: ResidenceLibrary) {
       pot(6,y,1.3,1.2);
     }
   }
+  yield;
   zone="crown";
   // Flat roof ends the third storey; skylight over the connecting stair.
   box([3,13.95,-2.45],[8.3,.25,6.5],"stone");
@@ -350,6 +356,7 @@ export function buildResidence(m: Palette, library: ResidenceLibrary) {
   box([-5.8,13.96,3],[2.4,.28,5.4],"stone");
 
   for(const [key,geometries] of batches) {
+    yield;
     const name=key.split(":")[1];
     const merged=mergeGeometries(geometries,false)!;
     const mesh=new Mesh(merged,palette[name]); mesh.name=key;

@@ -19,6 +19,7 @@ import { canUseVisionThree } from "../three/visionCapabilities";
 import { CanvasBoundary } from "../three/CanvasBoundary";
 import { heroWalkthrough } from "../../content/heroWalkthrough";
 import { ResidenceOverlay } from "./ResidenceOverlay";
+import { WalkthroughLoader } from "./WalkthroughLoader";
 import { sectionId } from "../scroll/anchors";
 
 const HeroWalkthroughCanvas = lazy(() => import("../three/HeroWalkthroughCanvas"));
@@ -65,6 +66,12 @@ export function HeroScene() {
   const poster = small ? heroWalkthrough.mobilePoster : heroWalkthrough.poster;
   const onFailure = useCallback(() => setFailed(true), []);
   const onSceneReady = useCallback(() => setSceneReady(true), []);
+  const assetProgress = useRef<number | null>(null);
+  const onAssetProgress = useCallback((fraction: number) => {
+    assetProgress.current = fraction;
+  }, []);
+  const [loaderDone, setLoaderDone] = useState(false);
+  const onLoaderDone = useCallback(() => setLoaderDone(true), []);
   const ready = sceneReady;
   const sceneEnd = heroWalkthrough.sceneEnd;
 
@@ -319,13 +326,16 @@ export function HeroScene() {
             <CanvasBoundary onFailure={onFailure}>
               <Suspense fallback={null}>
                 <HeroWalkthroughCanvas progress={progress} redraw={sceneRedraw} overlay={residenceOverlay}
-                  onReady={onSceneReady} onFailure={onFailure} />
+                  onReady={onSceneReady} onFailure={onFailure} onProgress={onAssetProgress} />
               </Suspense>
             </CanvasBoundary>
           </div>}
           <div className="hero-shade" />
         </div>
         <ResidenceOverlay overlay={residenceOverlay} />
+        {motion && loadScene && !loaderDone && (
+          <WalkthroughLoader assets={assetProgress} ready={ready} onDone={onLoaderDone} />
+        )}
         <div className="hero-top">
           <span className="eyebrow">Architecture & Interior Design</span>
           <span className="eyebrow">One residence / Four levels</span>
@@ -358,11 +368,7 @@ export function HeroScene() {
           Concept residence / Visual credits
         </a>
         <p className="hero-loading" role="status" aria-live="polite">
-          {failed
-            ? "Explore the work below."
-            : motion && !ready
-              ? "Preparing the walkthrough…"
-              : ""}
+          {failed ? "Explore the work below." : ""}
         </p>
       </section>
       <div className="hero-editorial">

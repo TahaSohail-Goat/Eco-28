@@ -15,6 +15,7 @@ import "./styles/responsive.css";
 import "./styles/navigation.css";
 import "./styles/housing-study.css";
 import "./styles/hero.css";
+import "./styles/walkthrough-loader.css";
 import "./styles/cinematic.css";
 import "./styles/vision-depth.css";
 import "./styles/materials-depth.css";
