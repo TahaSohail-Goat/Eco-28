@@ -26,6 +26,8 @@ const reducedMotion=typeof window!=="undefined"&&matchMedia("(prefers-reduced-mo
 const sky=`/media/residence-realism${liteResidence?"/lite":""}/garden-sky.hdr`;
 // Phones start sharp (antialiased, up to 1.5x) and step down only if frames run slow.
 const liteDpr=typeof window!=="undefined"?Math.max(1,Math.min(1.5,window.devicePixelRatio||1)):1;
+// Resolution never drops below 1x: lower looks smeared on dense phone screens.
+const liteLevels=[...new Set([liteDpr,1.25,1].filter(level=>level<=liteDpr))];
 // Report download progress before the preloads below start. Totals grow as
 // models reveal their textures, so the reported fraction never moves backwards.
 let assetProgress=0;
@@ -83,16 +85,22 @@ function Walkthrough({progress,redraw,overlay,onReady,onFailure}:Props) {
     return ()=>window.removeEventListener("pointermove",move);
   },[pointerGoal,invalidate]);
   const setDpr=useThree(state=>state.setDpr);
-  const pace=useMemo(()=>({last:0,gaps:[] as number[],scale:liteDpr}),[]);
+  const pace=useMemo(()=>({last:0,gaps:[] as number[],level:0,before:0,locked:false}),[]);
   useFrame((_,delta)=>{
-    if(liteResidence) {
+    if(liteResidence&&introStart.current) {
       // Renders while scrolling or gliding reveal the GPU's real pace; the median
-      // ignores idle pauses. Slow devices step resolution down until it's fluid.
+      // ignores idle pauses and the first moments after the reveal are skipped.
       const now=performance.now(),gap=now-pace.last;pace.last=now;
-      if(gap<1000)pace.gaps.push(gap);
+      if(gap<1000&&now-introStart.current>1500)pace.gaps.push(gap);
       if(pace.gaps.length>=20) {
         const median=pace.gaps.sort((a,b)=>a-b)[10];pace.gaps.length=0;
-        if(median>24&&pace.scale>.85){pace.scale=pace.scale>1.3?1.25:pace.scale>1.1?1:.85;setDpr(pace.scale);}
+        if(pace.before) {
+          // A step that didn't speed frames up (e.g. a browser 30fps cap) is undone.
+          if(median>=pace.before*.85){pace.level--;setDpr(liteLevels[pace.level]);pace.locked=true;}
+          pace.before=0;
+        } else if(!pace.locked&&median>26&&pace.level<liteLevels.length-1) {
+          pace.before=median;pace.level++;setDpr(liteLevels[pace.level]);
+        }
       }
     }
     const p=progress.current,pose=sampleCamera(p);
@@ -176,7 +184,7 @@ function Walkthrough({progress,redraw,overlay,onReady,onFailure}:Props) {
         Skipped on lite devices: area lights evaluate a per-pixel LTC lookup
         that is disproportionately costly on mobile GPUs. */}
     {liteResidence
-      ? <directionalLight position={[16,8,2]} intensity={1.1} color="#ffead2" target-position={[0,5,0]}/>
+      ? <directionalLight position={[16,8,2]} intensity={.7} color="#ffead2" target-position={[0,5,0]}/>
       : <rectAreaLight position={[9,7,0]} rotation={[0,Math.PI/2,0]} width={10} height={15} intensity={3.2} color="#ffead2"/>}
     {residence&&<primitive object={residence.root}/>}
     {residence&&<ResidenceFinish prepared={prepared} onFailure={onFailure}/>}
