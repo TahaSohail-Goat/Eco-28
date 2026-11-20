@@ -9,8 +9,13 @@ export const residenceTextureUrls=[
 ];
 export type ResidencePalette=Record<string,Material>;
 
+/** Sheen and clearcoat add whole shading lobes per pixel; drop them on lite devices. */
+export function liteSurface(material:Material) {
+  if(material instanceof MeshPhysicalMaterial){material.sheen=0;material.clearcoat=0;}
+}
+
 /** The maps tile in metres through geometry UVs, rather than stretching per object. */
-export function residenceMaterials(maps:Texture[],anisotropy:number) {
+export function residenceMaterials(maps:Texture[],anisotropy:number,lite=false) {
   const owned:Texture[]=[];
   const map=(i:number,repeat=1,color=false)=>{
     const t=maps[i].clone();t.wrapS=t.wrapT=RepeatWrapping;t.repeat.set(repeat,repeat);
@@ -43,6 +48,7 @@ export function residenceMaterials(maps:Texture[],anisotropy:number) {
     water:new MeshPhysicalMaterial({color:"#354f49",roughness:.2,metalness:.22,clearcoat:1,clearcoatRoughness:.13,envMapIntensity:.85}),
     mirror:plain("#c6c9bf",.07,1),
   };
+  if(lite)Object.values(materials).forEach(liteSurface);
   // Original abstract artwork; the house remains independent of client project photos.
   const canvas=document.createElement("canvas");canvas.width=canvas.height=512;
   const c=canvas.getContext("2d")!;

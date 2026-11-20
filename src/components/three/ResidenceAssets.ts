@@ -1,12 +1,18 @@
 import { useMemo } from "react";
 import { useGLTF } from "@react-three/drei/core/Gltf";
 import { Box3, Color, Group, Light, Material, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, Vector3 } from "three";
+import { liteSurface } from "./ResidenceMaterials";
 
 export type ResidenceAsset = { object: Group; size: Vector3 };
 export type ResidenceLibrary = Record<"sofa"|"chair"|"plant"|"accent"|"tree"|"dining",ResidenceAsset>;
 const keys=["sofa","chair","plant","accent","tree","dining"] as const;
 const models=["sofa","mid_century_lounge_chair","potted_plant_01","potted_plant_04","island_tree_02","dining_chair_02"];
-export const residenceAssetUrls=models.map(name=>`/media/residence-realism/${name}/scene.gltf`);
+/** Phones, tablets and low-core devices get reduced props and render settings. */
+export const liteResidence=typeof window!=="undefined"&&(
+  matchMedia("(max-width: 767px), (pointer: coarse)").matches||(navigator.hardwareConcurrency??8)<=4);
+// Garden trees are only ever seen from a distance, so every device uses the lite tree.
+const lite=(name:string)=>name!=="sofa"&&(liteResidence||name==="island_tree_02");
+export const residenceAssetUrls=models.map(name=>`/media/residence-realism/${name}${lite(name)?"-lite":""}/scene.gltf`);
 
 /** Authored geometry and baked material occlusion, reused across the same house. */
 export function useResidenceAssets() {
@@ -39,6 +45,7 @@ export function useResidenceAssets() {
               }
             }
           }
+          if(liteResidence)liteSurface(material);
           return material;
         };
         node.material=Array.isArray(node.material)?node.material.map(prepare):prepare(node.material);

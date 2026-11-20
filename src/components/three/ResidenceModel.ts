@@ -22,7 +22,9 @@ export function buildResidence(m: Palette, library: ResidenceLibrary) {
   const add = (geometry: BufferGeometry, material: string, p: Tuple3, rotation: Tuple3=[0,0,0]) => {
     const matrix=new Matrix4(); const q=new Quaternion().setFromEuler(new Euler(...rotation));
     matrix.compose(new Vector3(...p),q,new Vector3(1,1,1));
-    const g=geometry.index ? geometry.toNonIndexed() : geometry.clone();
+    // Indexed batches keep shared vertices: far less to build, upload and shade.
+    const g=geometry.clone();
+    if(!g.index)g.setIndex([...Array(g.getAttribute("position").count).keys()]);
     geometry.dispose(); g.applyMatrix4(matrix);
     // Architectural maps retain a real-world texel density across differently sized parts.
     if(!["art","glow"].includes(material)) {

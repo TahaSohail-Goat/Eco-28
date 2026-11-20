@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Environment } from "@react-three/drei/core/Environment";
+import { useEnvironment } from "@react-three/drei/core/useEnvironment";
 import { useGLTF } from "@react-three/drei/core/Gltf";
 import { useTexture } from "@react-three/drei/core/Texture";
 import { AgXToneMapping, Group, MathUtils, MeshStandardMaterial, PCFSoftShadowMap, PerspectiveCamera, Vector3 } from "three";
@@ -8,7 +9,7 @@ import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUnifo
 import { cameraBeats, sampleCamera, chapterAt, residenceChapters, residenceCallouts, type Tuple3 } from "../../content/heroWalkthrough";
 import { buildResidence } from "./ResidenceModel";
 import { residenceMaterials, residenceTextureUrls } from "./ResidenceMaterials";
-import { residenceAssetUrls, useResidenceAssets } from "./ResidenceAssets";
+import { liteResidence, residenceAssetUrls, useResidenceAssets } from "./ResidenceAssets";
 import { ResidenceFinish } from "./ResidenceFinish";
 
 type Props = {
@@ -19,12 +20,16 @@ type Props = {
   onFailure: () => void;
 };
 const smooth = (p: number) => { const x=MathUtils.clamp(p,0,1);return x*x*(3-2*x); };
-// Start both independent asset groups together before Suspense renders the scene.
+const sky="/media/residence-realism/garden-sky.hdr";
+// Start every independent asset group together; the sky otherwise waits until
+// the models resolve, adding a full extra download to the reveal.
 useGLTF.preload(residenceAssetUrls);
 useTexture.preload(residenceTextureUrls);
+useEnvironment.preload({files:sky});
 RectAreaLightUniformsLib.init();
 function Walkthrough({progress,redraw,overlay,onReady,onFailure}:Props) {
   const { camera,gl,invalidate,size }=useThree();
+  const mobile=size.width<768;
   const sliding=useRef<Group>(null);
   const lastChapter=useRef(-1);
   const ready=useRef(false), readyFrame=useRef(0);
@@ -32,7 +37,7 @@ function Walkthrough({progress,redraw,overlay,onReady,onFailure}:Props) {
   const point=useMemo(()=>new Vector3(),[]);
   const assets=useResidenceAssets();
   const maps=useTexture(residenceTextureUrls);
-  const surfaces=useMemo(()=>residenceMaterials(maps,Math.min(8,gl.capabilities.getMaxAnisotropy())),[maps,gl]);
+  const surfaces=useMemo(()=>residenceMaterials(maps,Math.min(liteResidence?4:8,gl.capabilities.getMaxAnisotropy()),liteResidence),[maps,gl]);
   const residence=useMemo(()=>buildResidence(surfaces.materials,assets.library),[surfaces,assets]);
   useEffect(()=>()=>{residence.dispose();surfaces.dispose();assets.dispose();},[residence,surfaces,assets]);
   useEffect(()=>{
@@ -45,7 +50,6 @@ function Walkthrough({progress,redraw,overlay,onReady,onFailure}:Props) {
   useEffect(()=>{gl.shadowMap.needsUpdate=true;invalidate();},[size.width,size.height,gl,invalidate]);
   useFrame(()=>{
     const p=progress.current,pose=sampleCamera(p);
-    const mobile=size.width<768;
     // Move the EXTERIOR camera back in portrait; retain eye-height interior routing.
     const exterior = 1-smooth(p/.17) + smooth((p-.85)/.12);
     const widen=mobile ? .3*exterior : 0;
@@ -99,7 +103,7 @@ function Walkthrough({progress,redraw,overlay,onReady,onFailure}:Props) {
   return <>
     <color attach="background" args={["#bfc6bf"]}/>
     <fog attach="fog" args={["#8a9488",180,800]}/>
-    <Environment files="/media/residence-realism/garden-sky.hdr" background backgroundBlurriness={0} backgroundIntensity={1.2} environmentIntensity={.55}/>
+    <Environment files={sky} background backgroundBlurriness={0} backgroundIntensity={1.2} environmentIntensity={.55}/>
     <hemisphereLight args={["#dbe4ec","#74674f",.4]}/>
     <directionalLight position={[-18,26,18]} color="#ffe5c4" intensity={2.5} castShadow
       shadow-mapSize={[1024,1024]}
@@ -107,8 +111,10 @@ function Walkthrough({progress,redraw,overlay,onReady,onFailure}:Props) {
       shadow-camera-near={1} shadow-camera-far={75} shadow-normalBias={.035} shadow-bias={-.0002}
       target-position={[0,5,0]}/>
     {/* A single broad window-side fill approximates bounced daylight across
-        the four levels without compiling eight lights into every material. */}
-    <rectAreaLight position={[9,7,0]} rotation={[0,Math.PI/2,0]} width={10} height={15} intensity={3.2} color="#ffead2"/>
+        the four levels without compiling eight lights into every material.
+        Skipped on lite devices: area lights evaluate a per-pixel LTC lookup
+        that is disproportionately costly on mobile GPUs. */}
+    {!liteResidence && <rectAreaLight position={[9,7,0]} rotation={[0,Math.PI/2,0]} width={10} height={15} intensity={3.2} color="#ffead2"/>}
     <primitive object={residence.root}/>
     <ResidenceFinish prepared={prepared} onFailure={onFailure}/>
     <group ref={sliding}>
@@ -128,7 +134,8 @@ function Walkthrough({progress,redraw,overlay,onReady,onFailure}:Props) {
 }
 export default function HeroWalkthroughCanvas(props:Props) {
   return <Canvas camera={{position:cameraBeats[0].position,fov:43,near:.06,far:1000}}
-    frameloop="demand" shadows dpr={[1,1.25]} gl={{antialias:true,alpha:false,powerPreference:"high-performance"}}
+    frameloop="demand" shadows={!liteResidence} dpr={liteResidence?1:[1,1.25]}
+    gl={{antialias:!liteResidence,alpha:false,powerPreference:"high-performance"}}
     onCreated={({gl})=>{gl.toneMapping=AgXToneMapping;gl.toneMappingExposure=1.05;gl.shadowMap.type=PCFSoftShadowMap;}}>
     <Walkthrough {...props}/>
   </Canvas>;

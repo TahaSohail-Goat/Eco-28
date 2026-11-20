@@ -70,7 +70,8 @@ export function HeroScene() {
 
   useEffect(() => {
     if (!motion || !loadScene || sceneReady) return;
-    const timer = window.setTimeout(onFailure, 25000);
+    // Generous enough for slower mobile connections; the poster shows meanwhile.
+    const timer = window.setTimeout(onFailure, 40000);
     return () => clearTimeout(timer);
   }, [motion, loadScene, sceneReady, onFailure]);
 
