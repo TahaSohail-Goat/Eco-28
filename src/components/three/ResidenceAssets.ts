@@ -6,11 +6,11 @@ export type ResidenceAsset = { object: Group; size: Vector3 };
 export type ResidenceLibrary = Record<"sofa"|"chair"|"plant"|"accent"|"tree"|"dining",ResidenceAsset>;
 const keys=["sofa","chair","plant","accent","tree","dining"] as const;
 const models=["sofa","mid_century_lounge_chair","potted_plant_01","potted_plant_04","island_tree_02","dining_chair_02"];
-const urls=models.map(name=>`/media/residence-realism/${name}/scene.gltf`);
+export const residenceAssetUrls=models.map(name=>`/media/residence-realism/${name}/scene.gltf`);
 
 /** Authored geometry and baked material occlusion, reused across the same house. */
 export function useResidenceAssets() {
-  const loaded=useGLTF(urls);
+  const loaded=useGLTF(residenceAssetUrls);
   return useMemo(()=>{
     const owned=new Set<Material>();
     const library={} as ResidenceLibrary;

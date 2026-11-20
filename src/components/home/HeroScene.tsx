@@ -56,7 +56,10 @@ export function HeroScene() {
   const [failed, setFailed] = useState(false);
   const [loadVision, setLoadVision] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
-  const [loadScene, setLoadScene] = useState(false);
+  const [loadScene, setLoadScene] = useState(() => {
+    const hash = window.location.hash;
+    return !hash || hash === "#" || sectionId(hash) === "main";
+  });
   const [small] = useState(() => matchMedia("(max-width: 767px)").matches);
   const motion = enabled && !failed;
   const poster = small ? heroWalkthrough.mobilePoster : heroWalkthrough.poster;

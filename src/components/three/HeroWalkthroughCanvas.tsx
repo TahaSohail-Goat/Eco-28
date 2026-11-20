@@ -1,13 +1,14 @@
 ﻿import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Environment } from "@react-three/drei/core/Environment";
+import { useGLTF } from "@react-three/drei/core/Gltf";
 import { useTexture } from "@react-three/drei/core/Texture";
 import { AgXToneMapping, Group, MathUtils, MeshStandardMaterial, PCFSoftShadowMap, PerspectiveCamera, Vector3 } from "three";
 import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUniformsLib.js";
 import { cameraBeats, sampleCamera, chapterAt, residenceChapters, residenceCallouts, type Tuple3 } from "../../content/heroWalkthrough";
 import { buildResidence } from "./ResidenceModel";
 import { residenceMaterials, residenceTextureUrls } from "./ResidenceMaterials";
-import { useResidenceAssets } from "./ResidenceAssets";
+import { residenceAssetUrls, useResidenceAssets } from "./ResidenceAssets";
 import { ResidenceFinish } from "./ResidenceFinish";
 
 type Props = {
@@ -18,6 +19,9 @@ type Props = {
   onFailure: () => void;
 };
 const smooth = (p: number) => { const x=MathUtils.clamp(p,0,1);return x*x*(3-2*x); };
+// Start both independent asset groups together before Suspense renders the scene.
+useGLTF.preload(residenceAssetUrls);
+useTexture.preload(residenceTextureUrls);
 RectAreaLightUniformsLib.init();
 function Walkthrough({progress,redraw,overlay,onReady,onFailure}:Props) {
   const { camera,gl,invalidate,size }=useThree();
@@ -98,7 +102,7 @@ function Walkthrough({progress,redraw,overlay,onReady,onFailure}:Props) {
     <Environment files="/media/residence-realism/garden-sky.hdr" background backgroundBlurriness={0} backgroundIntensity={1.2} environmentIntensity={.55}/>
     <hemisphereLight args={["#dbe4ec","#74674f",.4]}/>
     <directionalLight position={[-18,26,18]} color="#ffe5c4" intensity={2.5} castShadow
-      shadow-mapSize={[size.width<768?1024:2048,size.width<768?1024:2048]}
+      shadow-mapSize={[1024,1024]}
       shadow-camera-left={-22} shadow-camera-right={22} shadow-camera-top={22} shadow-camera-bottom={-14}
       shadow-camera-near={1} shadow-camera-far={75} shadow-normalBias={.035} shadow-bias={-.0002}
       target-position={[0,5,0]}/>
@@ -124,7 +128,7 @@ function Walkthrough({progress,redraw,overlay,onReady,onFailure}:Props) {
 }
 export default function HeroWalkthroughCanvas(props:Props) {
   return <Canvas camera={{position:cameraBeats[0].position,fov:43,near:.06,far:1000}}
-    frameloop="demand" shadows dpr={[1,1.5]} gl={{antialias:true,alpha:false,powerPreference:"high-performance"}}
+    frameloop="demand" shadows dpr={[1,1.25]} gl={{antialias:true,alpha:false,powerPreference:"high-performance"}}
     onCreated={({gl})=>{gl.toneMapping=AgXToneMapping;gl.toneMappingExposure=1.05;gl.shadowMap.type=PCFSoftShadowMap;}}>
     <Walkthrough {...props}/>
   </Canvas>;

@@ -28,15 +28,15 @@ Floor surfaces are at 0, 3.5, 7, and 10.5 metres. Each ascent follows the same t
 | 64.1–78.4% | Third-floor study and sky terrace |
 | 78.4–100% | Pullback to the exterior |
 
-The hero pin spans 9.2 extra desktop viewports or 8.6 mobile viewports. The residence occupies the first 82% of the full pin, followed by the ivory editorial reveal. The camera only advances with document scroll. Resize restoration preserves the current journey position; navigation takes precedence.
+The hero pin spans 7 extra desktop viewports or 6.5 mobile viewports. The residence occupies the first 82% of the full pin, followed by the ivory editorial reveal. The camera only advances with document scroll. Resize restoration preserves the current journey position; navigation takes precedence.
 
 ## Rendering and fallback
 
-Local PBR maps, authored furniture, foliage, area fills, HDR lighting, and AgX output support the real-time scene. Static geometry is merged by material and floor. Desktop uses bounded contact shading and multisampling; mobile uses native antialiasing and portrait framing. Glass, foliage cutouts, and emissive fixtures are excluded from the ambient-occlusion normal override.
+Local PBR maps, authored furniture, foliage, area fills, HDR lighting, and AgX output support the real-time scene. Static geometry is merged by material and floor. Native antialiasing keeps the scene sharp without a costly full-screen ambient-occlusion pass; mobile uses portrait framing.
 
-The scene renders on demand. Canvas DPR is capped at 1.5, desktop postprocessing at 1.25; shadow maps are 2048px on desktop and 1024px on mobile. Materials compile asynchronously before the first reveal. Matching desktop/mobile posters cover loading.
+The scene renders on demand. Canvas DPR is capped at 1.25; shadow maps are 1024px. Models and surface maps begin loading together. Materials compile asynchronously before the first reveal. Matching desktop/mobile posters cover loading.
 
-Reduced motion, Save-Data, 2G connections, devices reporting at most 2 GB of memory, viewport height of 500px or less, initialization failure, and WebGL context loss show the same-house poster with ordinary content and navigation. The hero scene loads only when it enters the viewport. No video or image-sequence fallback is shipped.
+Reduced motion, Save-Data, 2G connections, devices reporting at most 2 GB of memory, viewport height of 500px or less, initialization failure, and WebGL context loss show the same-house poster with ordinary content and navigation. The hero scene starts loading immediately on a normal opening, and waits until the hero is visited for deep links. No video or image-sequence fallback is shipped.
 
 ## Maintenance
 

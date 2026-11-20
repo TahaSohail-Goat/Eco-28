@@ -2,8 +2,8 @@
 export const heroWalkthrough = {
   poster: "/media/hero-study/residence-poster.webp",
   mobilePoster: "/media/hero-study/residence-poster-mobile.webp",
-  desktopScroll: 9.2,
-  mobileScroll: 8.6,
+  desktopScroll: 7,
+  mobileScroll: 6.5,
   sceneEnd: 0.82,
 };
 export type Tuple3 = [number, number, number];
